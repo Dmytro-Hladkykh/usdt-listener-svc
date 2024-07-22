@@ -1,11 +1,11 @@
 package cli
 
 import (
-    "github.com/alecthomas/kingpin"
-    "gitlab.com/distributed_lab/kit/kv"
-    "gitlab.com/distributed_lab/logan/v3"
-    "https://github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/service"
-    "https://github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/service"
+	"github.com/alecthomas/kingpin"
+	"gitlab.com/distributed_lab/kit/kv"
+	"gitlab.com/distributed_lab/logan/v3"
 )
 
 func Run(args []string) bool {

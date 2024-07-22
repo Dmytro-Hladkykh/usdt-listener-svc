@@ -1,10 +1,10 @@
 package cli
 
 import (
-    migrate "github.com/rubenv/sql-migrate"
-    "gitlab.com/distributed_lab/logan/v3/errors"
-    "https://github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/assets"
-    "https://github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/assets"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
+	migrate "github.com/rubenv/sql-migrate"
+	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 var migrations = &migrate.EmbedFileSystemMigrationSource{

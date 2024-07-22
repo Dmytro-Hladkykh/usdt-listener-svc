@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-  "https://github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/cli"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/cli"
 )
 
 func main() {

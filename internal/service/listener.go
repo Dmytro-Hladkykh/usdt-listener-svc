@@ -1,5 +1,3 @@
-// File: internal/service/listener.go
-
 package service
 
 import (

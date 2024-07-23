@@ -79,7 +79,7 @@ In response you will get a 1st page with 10 USDT transactions :
         "ID": 1,
         "FromAddress": "0xbAd9ADa0E9633ED27Fa183dBdEceef76712a6Ee1",
         "ToAddress": "0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a",
-        "Amount": "31232094295",
+        "Amount": "101.961647",
         "TransactionHash": "0xccd3a013c32d19a45b2e1623a46c29340ff867f56a7d7ed263553abe0260d9af",
         "BlockNumber": 20369176,
         "Timestamp": "2024-07-23T12:17:29.298918Z"
@@ -88,7 +88,7 @@ In response you will get a 1st page with 10 USDT transactions :
         "ID": 2,
         "FromAddress": "0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a",
         "ToAddress": "0x0cA50FD1F9f2c4DAEB8EC483241118c35e0e472d",
-        "Amount": "31150890850",
+        "Amount": "1153.276971",
         "TransactionHash": "0xccd3a013c32d19a45b2e1623a46c29340ff867f56a7d7ed263553abe0260d9af",
         "BlockNumber": 20369176,
         "Timestamp": "2024-07-23T12:17:29.301972Z"
@@ -109,7 +109,7 @@ In response you will get:
     "ID": 1,
     "FromAddress": "0xbAd9ADa0E9633ED27Fa183dBdEceef76712a6Ee1",
     "ToAddress": "0x91C986709Bb4fE0763edF8E2690EE9d5019Bea4a",
-    "Amount": "31232094295",
+    "Amount": "101.961647",
     "TransactionHash": "0xccd3a013c32d19a45b2e1623a46c29340ff867f56a7d7ed263553abe0260d9af",
     "BlockNumber": 20369176,
     "Timestamp": "2024-07-23T12:17:29.298918Z"

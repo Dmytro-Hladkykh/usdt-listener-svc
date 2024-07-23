@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/shopspring/decimal"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
@@ -74,6 +75,8 @@ func (l *Listener) processLog(vLog types.Log) error {
     to := common.HexToAddress(vLog.Topics[2].Hex())
     amount := new(big.Int).SetBytes(vLog.Data)
 
+    decimalAmount := decimal.NewFromBigInt(amount, 0).Div(decimal.New(1, 6))
+
     block, err := l.client.BlockByNumber(context.Background(), big.NewInt(int64(vLog.BlockNumber)))
     if err != nil {
         return errors.Wrap(err, "failed to get block information")
@@ -82,7 +85,7 @@ func (l *Listener) processLog(vLog types.Log) error {
     transfer := data.USDTTransfer{
         FromAddress:     from.Hex(),
         ToAddress:       to.Hex(),
-        Amount:          amount.String(),
+        Amount:          decimalAmount.String(),
         TransactionHash: vLog.TxHash.Hex(),
         BlockNumber:     vLog.BlockNumber,
         Timestamp:       time.Unix(int64(block.Time()), 0), 

@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rubenv/sql-migrate v1.7.0
+	github.com/shopspring/decimal v1.4.0
 	gitlab.com/distributed_lab/ape v1.7.1
 	gitlab.com/distributed_lab/kit v1.11.3
 	gitlab.com/distributed_lab/logan v3.8.1+incompatible

@@ -23,11 +23,13 @@ type USDTTransferQ interface {
     Update(transfer USDTTransfer) (*USDTTransfer, error)
     Delete() error
 
+    FilterByID(id int64) USDTTransferQ
     FilterByFromAddress(address string) USDTTransferQ
     FilterByToAddress(address string) USDTTransferQ
     FilterByBlockNumber(blockNumber uint64) USDTTransferQ
     FilterByTransactionHash(hash string) USDTTransferQ
+    
     OrderByTimestamp(desc bool) USDTTransferQ
     Limit(limit uint64) USDTTransferQ
-    Page(pageNumber, pageSize uint64) USDTTransferQ
+    Offset(offset uint64) USDTTransferQ
 }

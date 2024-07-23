@@ -3,7 +3,7 @@ log:
   disable_sentry: true
 
 db:
-  url: db_url
+  url: postgres://postgres:password@db:5432/usdt_transfers?sslmode=disable
 
 listener:
   addr: :8000
@@ -14,6 +14,3 @@ cop:
   upstream: "http://..."
   service_name: usdt-listener-svc
   service_port: 80
-
-  infura:
-    api_key: "e6afe163675945c9b0f64b00139e5513"

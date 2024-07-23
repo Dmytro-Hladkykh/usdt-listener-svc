@@ -20,9 +20,9 @@ type service struct {
     cfg      config.Config
 }
 
-func (s *service) run() error {
+func (s *service) run(cfg config.Config) error {
     s.log.Info("Service started")
-    r := s.router()
+    r := s.router(cfg)
 
     if err := s.copus.RegisterChi(r); err != nil {
         return errors.Wrap(err, "cop failed")
@@ -35,7 +35,13 @@ func (s *service) run() error {
 }
 
 func (s *service) runUSDTListener() {
-    infuraURL := "https://mainnet.infura.io/v3/" + os.Getenv("INFURA_API_KEY")
+    infuraAPIKey := os.Getenv("INFURA_API_KEY")
+    if infuraAPIKey == "" {
+        s.log.Error("INFURA_API_KEY environment variable is not set")
+        return
+    }
+    
+    infuraURL := "wss://mainnet.infura.io/ws/v3/" + infuraAPIKey
     db := pg.NewMasterQ(s.cfg.DB())
     
     usdtListener, err := NewListener(infuraURL, db, s.log)
@@ -59,7 +65,7 @@ func newService(cfg config.Config) *service {
 }
 
 func Run(cfg config.Config) {
-    if err := newService(cfg).run(); err != nil {
+    if err := newService(cfg).run(cfg); err != nil {
         panic(err)
     }
 }

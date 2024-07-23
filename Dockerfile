@@ -1,17 +1,18 @@
-FROM golang:1.20-alpine as buildbase
+FROM golang:1.22.5-alpine as buildbase
 
-RUN apk add git build-base
+WORKDIR /go/src/github.com/Dmytro-Hladkykh/usdt-listener-svc
 
-WORKDIR /go/src/https://github.com/Dmytro-Hladkykh/usdt-listener-svc
-COPY vendor .
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN GOOS=linux go build  -o /usr/local/bin/usdt-listener-svc /go/src/https://github.com/Dmytro-Hladkykh/usdt-listener-svc
-
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /usr/local/bin/usdt-listener-svc .
 
 FROM alpine:3.9
 
-COPY --from=buildbase /usr/local/bin/usdt-listener-svc /usr/local/bin/usdt-listener-svc
 RUN apk add --no-cache ca-certificates
+
+COPY --from=buildbase /usr/local/bin/usdt-listener-svc /usr/local/bin/usdt-listener-svc
 
 ENTRYPOINT ["usdt-listener-svc"]

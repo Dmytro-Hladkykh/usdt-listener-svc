@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/copus"
 	"gitlab.com/distributed_lab/kit/copus/types"
@@ -35,6 +33,4 @@ func New(getter kv.Getter) Config {
 	}
 }
 
-func (c *config) InfuraAPIKey() string {
-    return c.getter.GetStringOrDefault("infura.api_key", os.Getenv("INFURA_API_KEY"))
-}
+

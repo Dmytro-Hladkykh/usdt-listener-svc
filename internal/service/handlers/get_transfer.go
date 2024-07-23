@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"gitlab.com/distributed_lab/ape"
@@ -12,9 +13,15 @@ func GetUSDTTransfer(w http.ResponseWriter, r *http.Request) {
 	log := Log(r)
 	db := DB(r)
 
-	id := chi.URLParam(r, "id")
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		log.WithError(err).Error("failed to parse id")
+		ape.RenderErr(w, problems.BadRequest(err)...)
+		return
+	}
 
-	transfer, err := db.USDTTransfer().FilterById(id).Get()
+	transfer, err := db.USDTTransfer().FilterByID(id).Get()
 	if err != nil {
 		log.WithError(err).Error("failed to get USDT transfer")
 		ape.RenderErr(w, problems.InternalError())

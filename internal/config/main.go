@@ -9,28 +9,29 @@ import (
 )
 
 type Config interface {
-	comfig.Logger
-	pgdb.Databaser
-	types.Copuser
-	comfig.Listenerer
+    comfig.Logger
+    comfig.Listenerer
+    types.Copuser
+    pgdb.Databaser
+    Ethereumer
 }
 
 type config struct {
-	comfig.Logger
-	pgdb.Databaser
-	types.Copuser
-	comfig.Listenerer
-	getter kv.Getter
+    comfig.Logger
+    comfig.Listenerer
+    types.Copuser
+    pgdb.Databaser
+    Ethereumer
+    getter kv.Getter
 }
 
 func New(getter kv.Getter) Config {
-	return &config{
-		getter:     getter,
-		Databaser:  pgdb.NewDatabaser(getter),
-		Copuser:    copus.NewCopuser(getter),
-		Listenerer: comfig.NewListenerer(getter),
-		Logger:     comfig.NewLogger(getter, comfig.LoggerOpts{}),
-	}
+    return &config{
+        getter:     getter,
+        Databaser:  pgdb.NewDatabaser(getter),
+        Copuser:    copus.NewCopuser(getter),
+        Listenerer: comfig.NewListenerer(getter),
+        Logger:     comfig.NewLogger(getter, comfig.LoggerOpts{}),
+        Ethereumer: NewEthereumer(getter),
+    }
 }
-
-

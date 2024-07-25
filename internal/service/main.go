@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data/pg"
@@ -35,16 +34,10 @@ func (s *service) run(cfg config.Config) error {
 }
 
 func (s *service) runUSDTListener() {
-    infuraAPIKey := os.Getenv("INFURA_API_KEY")
-    if infuraAPIKey == "" {
-        s.log.Error("INFURA_API_KEY environment variable is not set")
-        return
-    }
-    
-    infuraURL := "wss://mainnet.infura.io/ws/v3/" + infuraAPIKey
+    rpcURL := s.cfg.Ethereum().RPCURL
     db := pg.NewMasterQ(s.cfg.DB())
-    
-    usdtListener, err := NewListener(infuraURL, db, s.log)
+
+    usdtListener, err := NewListener(rpcURL, db, s.log)
     if err != nil {
         s.log.WithError(err).Error("Failed to create USDT listener")
         return

@@ -5,5 +5,7 @@ type MasterQ interface {
 
 	USDTTransfer() USDTTransferQ
 
+	LastProcessedBlock() LastProcessedBlockQ
+
 	Transaction(fn func(db MasterQ) error) error
 }

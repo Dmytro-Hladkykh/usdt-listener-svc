@@ -8,6 +8,9 @@ db:
 listener:
   addr: :8000
 
+ethereum:
+  rpc_url: "wss://mainnet.infura.io/ws/v3/e6afe163675945c9b0f64b00139e5513"
+
 cop:
   disabled: true
   endpoint: "http://..."

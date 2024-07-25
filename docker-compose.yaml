@@ -31,11 +31,7 @@ services:
     volumes:
       - ./config.yaml:/config.yaml
     entrypoint:
-      [
-        "/bin/sh",
-        "-c",
-        "/usr/local/bin/usdt-listener-svc migrate up && /usr/local/bin/usdt-listener-svc run service",
-      ]
+      ["/bin/sh", "-c", "/usr/local/bin/usdt-listener-svc run service"]
 
   nginx:
     image: nginx:latest

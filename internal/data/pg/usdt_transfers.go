@@ -60,6 +60,7 @@ func (q *usdtTransferQ) Insert(transfer data.USDTTransfer) (*data.USDTTransfer, 
 		"amount":           transfer.Amount,
 		"transaction_hash": transfer.TransactionHash,
 		"block_number":     transfer.BlockNumber,
+		"log_index":        transfer.LogIndex,
 		"timestamp":        transfer.Timestamp,
 	}
 	var result data.USDTTransfer
@@ -71,6 +72,53 @@ func (q *usdtTransferQ) Insert(transfer data.USDTTransfer) (*data.USDTTransfer, 
 	return &result, nil
 }
 
+func (q *usdtTransferQ) InsertIgnore(transfer data.USDTTransfer) (*data.USDTTransfer, error) {
+    clauses := map[string]interface{}{
+        "from_address":     transfer.FromAddress,
+        "to_address":       transfer.ToAddress,
+        "amount":           transfer.Amount,
+        "transaction_hash": transfer.TransactionHash,
+        "block_number":     transfer.BlockNumber,
+        "log_index":        transfer.LogIndex,
+        "timestamp":        transfer.Timestamp,
+    }
+    var result data.USDTTransfer
+    stmt := sq.Insert(usdtTransfersTableName).SetMap(clauses).Suffix("ON CONFLICT (transaction_hash, log_index) DO NOTHING RETURNING *")
+    err := q.db.Get(&result, stmt)
+    if err == sql.ErrNoRows {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, errors.Wrap(err, "failed to insert USDT transfer to db")
+    }
+    return &result, nil
+}
+
+func (q *usdtTransferQ) InsertBlock(transfers []data.USDTTransfer) error {
+    if len(transfers) == 0 {
+        return nil
+    }
+
+    insert := sq.Insert(usdtTransfersTableName).Columns(
+        "from_address", "to_address", "amount", "transaction_hash", 
+        "block_number", "log_index", "timestamp",
+    )
+
+    for _, transfer := range transfers {
+        insert = insert.Values(
+            transfer.FromAddress, transfer.ToAddress, transfer.Amount,
+            transfer.TransactionHash, transfer.BlockNumber, transfer.LogIndex,
+            transfer.Timestamp,
+        )
+    }
+
+    insert = insert.Suffix("ON CONFLICT (transaction_hash, log_index) DO NOTHING")
+
+    err := q.db.Exec(insert)
+    return errors.Wrap(err, "failed to insert batch of USDT transfers")
+}
+
+
 func (q *usdtTransferQ) Update(transfer data.USDTTransfer) (*data.USDTTransfer, error) {
 	clauses := map[string]interface{}{
 		"from_address":     transfer.FromAddress,
@@ -78,6 +126,7 @@ func (q *usdtTransferQ) Update(transfer data.USDTTransfer) (*data.USDTTransfer, 
 		"amount":           transfer.Amount,
 		"transaction_hash": transfer.TransactionHash,
 		"block_number":     transfer.BlockNumber,
+		"log_index":        transfer.LogIndex,
 		"timestamp":        transfer.Timestamp,
 	}
 	var result data.USDTTransfer
@@ -87,15 +136,6 @@ func (q *usdtTransferQ) Update(transfer data.USDTTransfer) (*data.USDTTransfer, 
 		return nil, errors.Wrap(err, "failed to update USDT transfer in db")
 	}
 	return &result, nil
-}
-
-func (q *usdtTransferQ) Delete() error {
-	stmt := sq.Delete(usdtTransfersTableName)
-	err := q.db.Exec(stmt)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete USDT transfers from db")
-	}
-	return nil
 }
 
 func (q *usdtTransferQ) FilterByID(id int64) data.USDTTransferQ {
@@ -140,4 +180,9 @@ func (q *usdtTransferQ) Limit(limit uint64) data.USDTTransferQ {
 func (q *usdtTransferQ) Offset(offset uint64) data.USDTTransferQ {
 	q.sql = q.sql.Offset(offset)
 	return q
+}
+
+func (q *usdtTransferQ) Page(pageParams *pgdb.OffsetPageParams) data.USDTTransferQ {
+    q.sql = pageParams.ApplyTo(q.sql, "id")
+    return q
 }

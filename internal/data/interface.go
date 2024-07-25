@@ -2,6 +2,8 @@ package data
 
 import (
 	"time"
+
+	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
 type USDTTransfer struct {
@@ -11,7 +13,13 @@ type USDTTransfer struct {
     Amount          string    `db:"amount"`
     TransactionHash string    `db:"transaction_hash"`
     BlockNumber     uint64    `db:"block_number"`
+    LogIndex        uint64    `db:"log_index"`
     Timestamp       time.Time `db:"timestamp"`
+}
+
+type LastProcessedBlock struct {
+    ID          int64  `db:"id"`
+    BlockNumber uint64 `db:"block_number"`
 }
 
 type USDTTransferQ interface {
@@ -20,8 +28,9 @@ type USDTTransferQ interface {
     Get() (*USDTTransfer, error)
     Select() ([]USDTTransfer, error)
     Insert(transfer USDTTransfer) (*USDTTransfer, error)
+    InsertIgnore(transfer USDTTransfer) (*USDTTransfer, error)
+    InsertBlock(transfer []USDTTransfer) error
     Update(transfer USDTTransfer) (*USDTTransfer, error)
-    Delete() error
 
     FilterByID(id int64) USDTTransferQ
     FilterByFromAddress(address string) USDTTransferQ
@@ -32,4 +41,13 @@ type USDTTransferQ interface {
     OrderByTimestamp(desc bool) USDTTransferQ
     Limit(limit uint64) USDTTransferQ
     Offset(offset uint64) USDTTransferQ
+
+    Page(pageParams *pgdb.OffsetPageParams) USDTTransferQ
+}
+
+type LastProcessedBlockQ interface {
+    New() LastProcessedBlockQ
+
+    Get() (uint64, error)
+    Update(blockNumber uint64) error
 }

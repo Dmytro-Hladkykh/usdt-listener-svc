@@ -10,13 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/shopspring/decimal"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 const (
     USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    ReconnectDelay      = 5 * time.Second
 )
 
 type Listener struct {
@@ -30,7 +30,6 @@ func NewListener(infuraURL string, db data.MasterQ, log *logan.Entry) (*Listener
     if err != nil {
         return nil, errors.Wrap(err, "failed to connect to Ethereum client")
     }
-
     return &Listener{
         client: client,
         db:     db,
@@ -39,26 +38,118 @@ func NewListener(infuraURL string, db data.MasterQ, log *logan.Entry) (*Listener
 }
 
 func (l *Listener) Listen(ctx context.Context) error {
+    for {
+        if err := l.processHistoricalEvents(ctx); err != nil {
+            l.log.WithError(err).Error("Failed to process historical events")
+            time.Sleep(ReconnectDelay)
+            continue
+        }
+
+        if err := l.listenForNewEvents(ctx); err != nil {
+            l.log.WithError(err).Error("Error listening for new events")
+            time.Sleep(ReconnectDelay)
+            continue
+        }
+
+        select {
+        case <-ctx.Done():
+            return ctx.Err()
+        default:
+            // Continue the loop
+        }
+    }
+}
+
+func (l *Listener) processHistoricalEvents(ctx context.Context) error {
+    lastProcessedBlock, err := l.db.LastProcessedBlock().Get()
+    if err != nil {
+        return errors.Wrap(err, "failed to get last processed block")
+    }
+
+    currentBlock, err := l.client.BlockNumber(ctx)
+    if err != nil {
+        return errors.Wrap(err, "failed to get current block number")
+    }
+
+    if lastProcessedBlock < currentBlock {
+        l.log.WithFields(logan.F{
+            "lastProcessedBlock": lastProcessedBlock,
+            "currentBlock":       currentBlock,
+        }).Info("Processing missed blocks")
+
+        contractAddress := common.HexToAddress(USDTContractAddress)
+
+        for blockNum := lastProcessedBlock + 1; blockNum <= currentBlock; blockNum++ {
+            query := ethereum.FilterQuery{
+                FromBlock: big.NewInt(int64(blockNum)),
+                ToBlock:   big.NewInt(int64(blockNum)),
+                Addresses: []common.Address{contractAddress},
+            }
+
+            logs, err := l.client.FilterLogs(ctx, query)
+            if err != nil {
+                return errors.Wrap(err, "failed to filter logs")
+            }
+
+            transactions := make([]data.USDTTransfer, 0)
+            for _, vLog := range logs {
+                tx, err := l.extractTransaction(vLog)
+                if err != nil {
+                    l.log.WithError(err).Error("Error processing historical log")
+                    continue
+                }
+                transactions = append(transactions, tx)
+            }
+
+            if len(transactions) > 0 {
+                if err := l.db.USDTTransfer().InsertBlock(transactions); err != nil {
+                    return errors.Wrap(err, "failed to insert block of USDT transfers")
+                }
+            }
+
+            if err := l.db.LastProcessedBlock().Update(blockNum); err != nil {
+                return errors.Wrap(err, "failed to update last processed block")
+            }
+        }
+    }
+
+    return nil
+}
+
+func (l *Listener) listenForNewEvents(ctx context.Context) error {
     contractAddress := common.HexToAddress(USDTContractAddress)
     query := ethereum.FilterQuery{
         Addresses: []common.Address{contractAddress},
     }
-
     logs := make(chan types.Log)
     sub, err := l.client.SubscribeFilterLogs(ctx, query, logs)
     if err != nil {
         return errors.Wrap(err, "failed to subscribe to logs")
     }
-
-    l.log.Info("Started listening for USDT transfers")
-
+    l.log.Info("Started listening for new USDT transfers")
     for {
         select {
         case err := <-sub.Err():
             return errors.Wrap(err, "subscription error")
         case vLog := <-logs:
-            if err := l.processLog(vLog); err != nil {
+            tx, err := l.extractTransaction(vLog)
+            if err != nil {
                 l.log.WithError(err).Error("Error processing log")
+                continue
+            }
+            if _, err := l.db.USDTTransfer().Insert(tx); err != nil {
+                l.log.WithError(err).Error("Failed to insert transaction")
+            } else {
+                l.log.WithFields(logan.F{
+                    "from":      tx.FromAddress,
+                    "to":        tx.ToAddress,
+                    "amount":    tx.Amount,
+                    "txHash":    tx.TransactionHash,
+                    "timestamp": tx.Timestamp,
+                }).Info("New USDT transfer processed")
+            }
+            if err := l.db.LastProcessedBlock().Update(vLog.BlockNumber); err != nil {
+                l.log.WithError(err).Error("Failed to update last processed block")
             }
         case <-ctx.Done():
             return ctx.Err()
@@ -66,43 +157,27 @@ func (l *Listener) Listen(ctx context.Context) error {
     }
 }
 
-func (l *Listener) processLog(vLog types.Log) error {
+func (l *Listener) extractTransaction(vLog types.Log) (data.USDTTransfer, error) {
     if len(vLog.Topics) != 3 {
-        return nil 
+        return data.USDTTransfer{}, errors.New("invalid log topics length")
     }
 
     from := common.HexToAddress(vLog.Topics[1].Hex())
     to := common.HexToAddress(vLog.Topics[2].Hex())
     amount := new(big.Int).SetBytes(vLog.Data)
 
-    decimalAmount := decimal.NewFromBigInt(amount, 0).Div(decimal.New(1, 6))
-
     block, err := l.client.BlockByNumber(context.Background(), big.NewInt(int64(vLog.BlockNumber)))
     if err != nil {
-        return errors.Wrap(err, "failed to get block information")
+        return data.USDTTransfer{}, errors.Wrap(err, "failed to get block information")
     }
 
-    transfer := data.USDTTransfer{
+    return data.USDTTransfer{
         FromAddress:     from.Hex(),
         ToAddress:       to.Hex(),
-        Amount:          decimalAmount.String(),
+        Amount:          amount.String(),
         TransactionHash: vLog.TxHash.Hex(),
         BlockNumber:     vLog.BlockNumber,
-        Timestamp:       time.Unix(int64(block.Time()), 0), 
-    }
-
-    _, err = l.db.USDTTransfer().Insert(transfer)
-    if err != nil {
-        return errors.Wrap(err, "failed to insert USDT transfer")
-    }
-
-    l.log.WithFields(logan.F{
-        "from":      transfer.FromAddress,
-        "to":        transfer.ToAddress,
-        "amount":    transfer.Amount,
-        "txHash":    transfer.TransactionHash,
-        "timestamp": transfer.Timestamp,
-    }).Info("New USDT transfer processed")
-
-    return nil
+        LogIndex:        uint64(vLog.Index),
+        Timestamp:       time.Unix(int64(block.Time()), 0),
+    }, nil
 }

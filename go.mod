@@ -9,8 +9,8 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rubenv/sql-migrate v1.7.0
-	github.com/shopspring/decimal v1.4.0
 	gitlab.com/distributed_lab/ape v1.7.1
+	gitlab.com/distributed_lab/figure v2.1.2+incompatible
 	gitlab.com/distributed_lab/kit v1.11.3
 	gitlab.com/distributed_lab/logan v3.8.1+incompatible
 )
@@ -61,7 +61,6 @@ require (
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
-	gitlab.com/distributed_lab/figure v2.1.2+incompatible // indirect
 	gitlab.com/distributed_lab/figure/v3 v3.1.4 // indirect
 	gitlab.com/distributed_lab/lorem v0.2.0 // indirect
 	gitlab.com/distributed_lab/running v1.6.0 // indirect

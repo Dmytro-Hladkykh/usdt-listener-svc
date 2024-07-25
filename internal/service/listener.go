@@ -80,6 +80,10 @@ func (l *Listener) processHistoricalEvents(ctx context.Context) error {
         contractAddress := common.HexToAddress(USDTContractAddress)
 
         for blockNum := lastProcessedBlock + 1; blockNum <= currentBlock; blockNum++ {
+            l.log.WithFields(logan.F{
+                "blockNumber": blockNum,
+            }).Info("Processing block")
+
             query := ethereum.FilterQuery{
                 FromBlock: big.NewInt(int64(blockNum)),
                 ToBlock:   big.NewInt(int64(blockNum)),
@@ -88,14 +92,20 @@ func (l *Listener) processHistoricalEvents(ctx context.Context) error {
 
             logs, err := l.client.FilterLogs(ctx, query)
             if err != nil {
-                return errors.Wrap(err, "failed to filter logs")
+                l.log.WithFields(logan.F{
+                    "blockNumber": blockNum,
+                }).WithError(err).Error("Failed to filter logs")
+                continue
             }
 
             transactions := make([]data.USDTTransfer, 0)
             for _, vLog := range logs {
                 tx, err := l.extractTransaction(vLog)
                 if err != nil {
-                    l.log.WithError(err).Error("Error processing historical log")
+                    l.log.WithFields(logan.F{
+                        "blockNumber": blockNum,
+                        "logIndex":    vLog.Index,
+                    }).WithError(err).Error("Error processing historical log")
                     continue
                 }
                 transactions = append(transactions, tx)
@@ -103,13 +113,23 @@ func (l *Listener) processHistoricalEvents(ctx context.Context) error {
 
             if len(transactions) > 0 {
                 if err := l.db.USDTTransfer().InsertBlock(transactions); err != nil {
-                    return errors.Wrap(err, "failed to insert block of USDT transfers")
+                    l.log.WithFields(logan.F{
+                        "blockNumber": blockNum,
+                    }).WithError(err).Error("Failed to insert block of USDT transfers")
+                    continue
                 }
             }
 
             if err := l.db.LastProcessedBlock().Update(blockNum); err != nil {
-                return errors.Wrap(err, "failed to update last processed block")
+                l.log.WithFields(logan.F{
+                    "blockNumber": blockNum,
+                }).WithError(err).Error("Failed to update last processed block")
+                continue
             }
+
+            l.log.WithFields(logan.F{
+                "blockNumber": blockNum,
+            }).Info("Successfully processed block")
         }
     }
 

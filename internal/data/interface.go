@@ -30,6 +30,7 @@ type USDTTransferQ interface {
     Insert(transfer USDTTransfer) (*USDTTransfer, error)
     InsertIgnore(transfer USDTTransfer) (*USDTTransfer, error)
     InsertBlock(transfer []USDTTransfer) error
+    DeleteLastProcessedBlock(blockNumber uint64) error
     Update(transfer USDTTransfer) (*USDTTransfer, error)
 
     FilterByID(id int64) USDTTransferQ

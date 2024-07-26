@@ -19,11 +19,7 @@ export KV_VIPER_FILE=./config.yaml
 
 1. Sign up to Infura
 2. Configure your API key
-3. Create .env in project root with API key
-
-```
-INFURA_API_KEY=your_api_key
-```
+3. Configure 'config.yaml' with your API key
 
 ## Running from docker
 
@@ -52,6 +48,15 @@ Possible commands are:
 
 ```
 /usr/local/bin/usdt-listener-svc migrate down
+```
+
+if you want service to listen only new transactions configure 'docker-compose.yaml' with 'PROCESS_HIST' 'true' statement:
+
+```
+environment:
+      - KV_VIPER_FILE=/config.yaml
+      - INFURA_API_KEY=${INFURA_API_KEY}
+      - PROCESS_HIST=${PROCES_HIST:-true}
 ```
 
 To run the service with Docker use:

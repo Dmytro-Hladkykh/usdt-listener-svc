@@ -10,10 +10,11 @@ CREATE TABLE usdt_transfers (
     timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
 
+CREATE INDEX idx_usdt_transfers_from_address ON usdt_transfers(from_address);
 CREATE INDEX usdt_transfers_from_index ON usdt_transfers (from_address);
 CREATE INDEX usdt_transfers_to_index ON usdt_transfers (to_address);
 CREATE INDEX usdt_transfers_timestamp_index ON usdt_transfers (timestamp);
-CREATE UNIQUE INDEX usdt_transfers_tx_log_index ON usdt_transfers (transaction_hash, log_index);
+CREATE UNIQUE INDEX usdt_transfers_tx_log_index ON usdt_transfers (block_number, log_index);
 
 CREATE TABLE last_processed_block (
     id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
@@ -27,6 +28,7 @@ DROP INDEX IF EXISTS usdt_transfers_timestamp_index;
 DROP INDEX IF EXISTS usdt_transfers_to_index;
 DROP INDEX IF EXISTS usdt_transfers_from_index;
 DROP INDEX IF EXISTS usdt_transfers_tx_log_index;
+DROP INDEX IF EXISTS idx_usdt_transfers_from_address;
 
 DROP TABLE IF EXISTS usdt_transfers;
 DROP TABLE IF EXISTS last_processed_block;

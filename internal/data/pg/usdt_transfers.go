@@ -2,6 +2,8 @@ package pg
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data"
 	sq "github.com/Masterminds/squirrel"
@@ -99,25 +101,44 @@ func (q *usdtTransferQ) InsertBlock(transfers []data.USDTTransfer) error {
         return nil
     }
 
-    insert := sq.Insert(usdtTransfersTableName).Columns(
-        "from_address", "to_address", "amount", "transaction_hash", 
-        "block_number", "log_index", "timestamp",
-    )
+    query := `INSERT INTO usdt_transfers 
+              (from_address, to_address, amount, transaction_hash, 
+               block_number, log_index, timestamp) 
+              VALUES `
 
-    for _, transfer := range transfers {
-        insert = insert.Values(
-            transfer.FromAddress, transfer.ToAddress, transfer.Amount,
-            transfer.TransactionHash, transfer.BlockNumber, transfer.LogIndex,
+    values := make([]interface{}, 0, len(transfers)*7)
+    placeholders := make([]string, 0, len(transfers))
+
+    for i, transfer := range transfers {
+        values = append(values, 
+            transfer.FromAddress,
+            transfer.ToAddress,
+            transfer.Amount,
+            transfer.TransactionHash,
+            transfer.BlockNumber,
+            transfer.LogIndex,
             transfer.Timestamp,
         )
+        placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+            i*7+1, i*7+2, i*7+3, i*7+4, i*7+5, i*7+6, i*7+7,
+        ))
     }
 
-    insert = insert.Suffix("ON CONFLICT (transaction_hash, log_index) DO NOTHING")
+    query += strings.Join(placeholders, ", ")
 
-    err := q.db.Exec(insert)
-    return errors.Wrap(err, "failed to insert batch of USDT transfers")
+    return q.db.Transaction(func() error {
+        if err := q.db.ExecRaw(query, values...); err != nil {
+            return errors.Wrap(err, "failed to insert transfers")
+        }
+        return nil
+    })
 }
 
+func (q *usdtTransferQ) DeleteLastProcessedBlock(blockNumber uint64) error {
+    deleteStmt := sq.Delete(usdtTransfersTableName).Where(sq.Eq{"block_number": blockNumber})
+    err := q.db.Exec(deleteStmt)
+    return errors.Wrap(err, "failed to delete transactions for the last processed block")
+}
 
 func (q *usdtTransferQ) Update(transfer data.USDTTransfer) (*data.USDTTransfer, error) {
 	clauses := map[string]interface{}{

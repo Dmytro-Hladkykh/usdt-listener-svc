@@ -31,8 +31,7 @@ services:
       - PROCESS_HIST=${PROCESS_HIST:-true}
     volumes:
       - ./config.yaml:/config.yaml
-    entrypoint:
-      ["/bin/sh", "-c", "/usr/local/bin/usdt-listener-svc run service"]
+    entrypoint: ["/bin/sh", "-c", "usr/local/bin/usdt-listener-svc run service"]
 
   nginx:
     image: nginx:latest

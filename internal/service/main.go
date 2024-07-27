@@ -7,6 +7,7 @@ import (
 
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data/pg"
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/service/listener"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
@@ -37,7 +38,7 @@ func (s *service) runUSDTListener() {
     rpcURL := s.cfg.Ethereum().RPCURL
     db := pg.NewMasterQ(s.cfg.DB())
 
-    usdtListener, err := NewListener(rpcURL, db, s.log)
+    usdtListener, err := listener.NewListener(rpcURL, db, s.log)
     if err != nil {
         s.log.WithError(err).Error("Failed to create USDT listener")
         return

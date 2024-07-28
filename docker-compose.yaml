@@ -28,7 +28,7 @@ services:
     environment:
       - KV_VIPER_FILE=/config.yaml
       - INFURA_API_KEY=${INFURA_API_KEY}
-      - PROCESS_HIST=${PROCESS_HIST:-true}
+      - PROCESS_HIST=${PROCESS_HIST:-false}
     volumes:
       - ./config.yaml:/config.yaml
     entrypoint: ["/bin/sh", "-c", "usr/local/bin/usdt-listener-svc run service"]

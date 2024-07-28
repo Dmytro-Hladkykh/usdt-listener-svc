@@ -2,9 +2,8 @@
 
 GENERATOR_IMAGE=tokend/openapi-generator:v0.1.0
 
-
-GENERATED="${GOPATH}/src/https://github.com/Dmytro-Hladkykh/usdt-listener-svc/resources"
-OPENAPI_DIR="${GOPATH}/src/https://github.com/Dmytro-Hladkykh/usdt-listener-svc/docs/web_deploy"
+GENERATED="$PWD/resources"
+OPENAPI_DIR="$PWD/docs/web_deploy"
 PACKAGE_NAME=resources
 
 function printHelp {

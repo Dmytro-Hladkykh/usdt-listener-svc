@@ -1,0 +1,49 @@
+get:
+  tags:
+    - USDT Transfers
+  summary: List USDT Transfers
+  description: Get a list of USDT transfers with pagination
+  operationId: listUSDTTransfers
+  parameters:
+    - name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        default: 1
+    - name: per_page
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        default: 20
+  responses:
+    "200":
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/USDTtransfer"
+          example:
+            - ID: 1342
+              FromAddress: "0x99d2B97CF7c98eC273E217CEb685A277Bf725414"
+              ToAddress: "0x89e51fA8CA5D66cd220bAed62ED01e8951aa7c40"
+              Amount: "1210000000"
+              TransactionHash: "0x6fb856387d2c00d1c426f8264ac56eb78dba7f4fc22ac8fd408d73fdb91fe1de"
+              BlockNumber: 20405930
+              LogIndex: 316
+              Timestamp: "2024-07-28T15:25:35Z"
+            - ID: 1341
+              FromAddress: "0x21cAa55033390271D07065D7e20c472938a13aA5"
+              ToAddress: "0x640F88f3aB6aD4E5ff38B1096C5A4C48FC90AE60"
+              Amount: "165048257"
+              TransactionHash: "0xc763a72aa9f3e55afe1cf006b3c9cdd0e38fee184e52422623c8bc1112d19ec6"
+              BlockNumber: 20405930
+              LogIndex: 315
+              Timestamp: "2024-07-28T15:25:35Z"
+    "400":
+      description: Bad request
+    "500":
+      description: Internal server error

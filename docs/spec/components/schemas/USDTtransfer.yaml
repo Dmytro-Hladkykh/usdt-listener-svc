@@ -1,0 +1,55 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    example: "800"
+  type:
+    type: string
+    enum:
+      - usdt-transfer
+  attributes:
+    type: object
+    required:
+      - from_address
+      - to_address
+      - amount
+      - transaction_hash
+      - block_number
+      - log_index
+      - timestamp
+    properties:
+      from_address:
+        type: string
+        description: "Ethereum address of the sender"
+        example: "0x5f4F9BaA93e5569Be6F58a52fd14852d8CdB9237"
+      to_address:
+        type: string
+        description: "Ethereum address of the recipient"
+        example: "0xEf8801eaf234ff82801821FFe2d78D60a0237F97"
+      amount:
+        type: string
+        description: "Amount of USDT transferred"
+        example: "10000000000"
+      transaction_hash:
+        type: string
+        description: "Hash of the Ethereum transaction"
+        example: "0x1c50947934799b0277e4cd59e97d2b4456de114ebb8c91325637ea873c021ee5"
+      block_number:
+        type: integer
+        format: int64
+        description: "Block number where the transfer occurred"
+        example: 20398186
+      log_index:
+        type: integer
+        format: int64
+        description: "Index of the log in the block"
+        example: 138
+      timestamp:
+        type: string
+        format: date-time
+        description: "Timestamp of the transfer"
+        example: "2024-07-27T13:28:47Z"

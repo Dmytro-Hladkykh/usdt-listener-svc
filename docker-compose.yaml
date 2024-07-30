@@ -29,7 +29,7 @@ services:
       - KV_VIPER_FILE=/config.yaml
       - INFURA_API_KEY=${e6afe163675945c9b0f64b00139e5513}
       - PROCESS_HIST=${PROCESS_HIST:-true}
-      - STARTING_BLOCK=${STARTING_BLOCK:-20420430}
+      - STARTING_BLOCK=${STARTING_BLOCK:-20420510}
     volumes:
       - ./config.yaml:/config.yaml
     entrypoint:

@@ -19,33 +19,47 @@ get:
           schema:
             type: object
             properties:
-              ID:
-                type: integer
-                example: 1
-              FromAddress:
-                type: string
-                example: "0x6b75d8AF000000e20B7a7DDf000Ba900b4009A80"
-              ToAddress:
-                type: string
-                example: "0xc7bBeC68d12a0d1830360F8Ec58fA599bA1b0e9b"
-              Amount:
-                type: string
-                example: "26394406656"
-              TransactionHash:
-                type: string
-                example: "0x8a31368f2c39bbc47add1102589f46b4db213f7e443cd5a076c27f046e93b811"
-              BlockNumber:
-                type: integer
-                example: 20398156
-              LogIndex:
-                type: integer
-                example: 5
-              Timestamp:
-                type: string
-                format: date-time
+              data:
+                $ref: "#/components/schemas/USDTtransfer"
     "400":
-      description: Bad request
+      description: Bad request - Invalid ID supplied
     "404":
-      description: USDT Transfer not found
+      description: Not found - USDT Transfer not found
     "500":
       description: Internal server error
+
+components:
+  schemas:
+    USDTTransfer:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "usdt_transfer"
+        id:
+          type: string
+          example: "1"
+        attributes:
+          type: object
+          properties:
+            fromAddress:
+              type: string
+              example: "0x6b75d8AF000000e20B7a7DDf000Ba900b4009A80"
+            toAddress:
+              type: string
+              example: "0xc7bBeC68d12a0d1830360F8Ec58fA599bA1b0e9b"
+            amount:
+              type: string
+              example: "26394406656"
+            transactionHash:
+              type: string
+              example: "0x8a31368f2c39bbc47add1102589f46b4db213f7e443cd5a076c27f046e93b811"
+            blockNumber:
+              type: integer
+              example: 20398156
+            logIndex:
+              type: integer
+              example: 5
+            timestamp:
+              type: string
+              format: date-time

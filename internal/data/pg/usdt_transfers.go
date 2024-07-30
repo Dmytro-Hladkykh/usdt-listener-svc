@@ -85,8 +85,8 @@ func (q *usdtTransferQ) InsertIgnore(transfer data.USDTTransfer) (*data.USDTTran
         "timestamp":        transfer.Timestamp,
     }
     var result data.USDTTransfer
-    stmt := sq.Insert(usdtTransfersTableName).SetMap(clauses).Suffix("ON CONFLICT (transaction_hash, log_index) DO NOTHING RETURNING *")
-    err := q.db.Get(&result, stmt)
+	stmt := sq.Insert(usdtTransfersTableName).SetMap(clauses).Suffix("ON CONFLICT (block_number, log_index) DO NOTHING RETURNING *")
+	err := q.db.Get(&result, stmt)
     if err == sql.ErrNoRows {
         return nil, nil
     }

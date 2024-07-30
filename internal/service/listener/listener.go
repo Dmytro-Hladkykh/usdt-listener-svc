@@ -3,9 +3,9 @@ package listener
 import (
 	"context"
 	"math/big"
-	"os"
 	"time"
 
+	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -24,11 +24,28 @@ type Listener struct {
     client *ethclient.Client
     db     data.MasterQ
     log    *logan.Entry
+    config config.Config
 }
 
-func NewListener(infuraURL string, db data.MasterQ, log *logan.Entry) (*Listener, error) {
-    // Connect to the Ethereum client
-    client, err := ethclient.Dial(infuraURL)
+func (l *Listener) getStartingBlock(ctx context.Context, configStartingBlock uint64) (uint64, error) {
+    dbBlock, err := l.db.LastProcessedBlock().Get()
+    if err != nil {
+        return 0, errors.Wrap(err, "failed to get last processed block from DB")
+    }
+
+    startingBlock := max(configStartingBlock, dbBlock)
+
+    currentBlock, err := l.client.BlockNumber(ctx)
+    if err != nil {
+        return 0, errors.Wrap(err, "failed to get current block number")
+    }
+
+    return min(startingBlock, currentBlock), nil
+}
+
+// NewListener creates a new Listener instance
+func NewListener(config config.Config, db data.MasterQ, log *logan.Entry) (*Listener, error) {
+    client, err := ethclient.Dial(config.Ethereum().RPCURL)
     if err != nil {
         return nil, errors.Wrap(err, "failed to connect to Ethereum client")
     }
@@ -36,37 +53,38 @@ func NewListener(infuraURL string, db data.MasterQ, log *logan.Entry) (*Listener
         client: client,
         db:     db,
         log:    log,
+        config: config,
     }, nil
 }
 
 // Listen starts the main loop for listening to USDT transfers
-func (l *Listener) Listen(ctx context.Context) error {
-    processHist := os.Getenv("PROCESS_HIST")
+func (l *Listener) Listen(ctx context.Context, processHist bool, configStartingBlock uint64) error {
+    startBlock, err := l.getStartingBlock(ctx, configStartingBlock)
+    if err != nil {
+        return errors.Wrap(err, "failed to get starting block")
+    }
 
-    var lastProcessedBlock uint64
-    var err error
-
-    // Process historical events if enabled
-    if processHist == "true" {
-        lastProcessedBlock, err = l.processHistoricalEvents(ctx)
+    if processHist {
+        startBlock, err = l.processHistoricalEvents(ctx, startBlock)
         if err != nil {
             l.log.WithError(err).Error("Failed to process historical events")
         }
-    } else {
-        // Skip historical processing and start from the current block
-        l.log.Info("Skipping historical events processing")
-        currentBlock, err := l.client.BlockNumber(ctx)
-        if err != nil {
-            return errors.Wrap(err, "failed to get current block number")
+        // Re-process the last few blocks to ensure no transactions are missed
+        overlapBlockCount := uint64(1)
+        if startBlock > overlapBlockCount {
+            startBlock -= overlapBlockCount
+        } else {
+            startBlock = 0
         }
-        lastProcessedBlock = currentBlock
-        if err := l.db.LastProcessedBlock().Update(currentBlock); err != nil {
+    } else {
+        l.log.Info("Skipping historical events processing")
+        if err := l.db.LastProcessedBlock().Update(startBlock); err != nil {
             l.log.WithError(err).Error("Failed to update last processed block")
         }
     }
 
     // Start listening for new events
-    return l.listenForNewEvents(ctx, lastProcessedBlock)
+    return l.listenForNewEvents(ctx, startBlock)
 }
 
 // extractTransaction extracts USDT transfer data from a log event

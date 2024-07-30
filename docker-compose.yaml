@@ -27,11 +27,17 @@ services:
         condition: service_healthy
     environment:
       - KV_VIPER_FILE=/config.yaml
-      - INFURA_API_KEY=${INFURA_API_KEY}
-      - PROCESS_HIST=${PROCESS_HIST:-false}
+      - INFURA_API_KEY=${e6afe163675945c9b0f64b00139e5513}
+      - PROCESS_HIST=${PROCESS_HIST:-true}
+      - STARTING_BLOCK=${STARTING_BLOCK:-20420430}
     volumes:
       - ./config.yaml:/config.yaml
-    entrypoint: ["/bin/sh", "-c", "usr/local/bin/usdt-listener-svc run service"]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        "usr/local/bin/usdt-listener-svc migrate down && usr/local/bin/usdt-listener-svc migrate up && usr/local/bin/usdt-listener-svc run service",
+      ]
 
   nginx:
     image: nginx:latest

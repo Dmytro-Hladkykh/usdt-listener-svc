@@ -57,6 +57,7 @@ environment:
       - KV_VIPER_FILE=/config.yaml
       - INFURA_API_KEY=${INFURA_API_KEY}
       - PROCESS_HIST=${PROCES_HIST:-true}
+      - STARTING_BLOCK=${STARTING_BLOCK:-value}
 ```
 
 To run the service with Docker use:

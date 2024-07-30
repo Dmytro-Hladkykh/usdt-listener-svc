@@ -45,5 +45,7 @@ get:
               Timestamp: "2024-07-28T15:25:35Z"
     "400":
       description: Bad request
+    "404":
+      description: Not found - USDT Transfer not found
     "500":
       description: Internal server error

@@ -6,7 +6,6 @@ import (
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/service/requests"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
-	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
 func ListUSDTTransfers(w http.ResponseWriter, r *http.Request) {
@@ -26,10 +25,7 @@ func ListUSDTTransfers(w http.ResponseWriter, r *http.Request) {
         transfersQ = transfersQ.FilterByFromAddress(request.Address)
     }
 
-    pageParams := pgdb.OffsetPageParams{
-        Limit:  uint64(request.PerPage),
-		PageNumber: uint64(request.Page),
-    }
+    pageParams := request.GetPageParams()
 
     transfers, err := transfersQ.Page(&pageParams).Select()
     if err != nil {

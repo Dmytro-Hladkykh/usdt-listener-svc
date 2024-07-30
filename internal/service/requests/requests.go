@@ -2,12 +2,13 @@ package requests
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	"gitlab.com/distributed_lab/kit/pgdb"
+	"gitlab.com/distributed_lab/urlval"
 )
 
 type CreateUSDTTransferRequest struct {
@@ -50,29 +51,30 @@ func validateCreateUSDTTransferRequest(request CreateUSDTTransferRequest) error 
 }
 
 type ListUSDTTransfersRequest struct {
-    Page    int    `json:"page"`
-    PerPage int    `json:"per_page"`
-    Address string `json:"address"`
+    Page    int    `url:"page"`
+    PerPage int    `url:"per_page"`
+    Address string `url:"address"`
+    Limit   uint64
+    PageNumber uint64
 }
 
 func NewListUSDTTransfersRequest(r *http.Request) (ListUSDTTransfersRequest, error) {
-    request := ListUSDTTransfersRequest{
-        Page:    1,
-        PerPage: 20,
+    var request ListUSDTTransfersRequest
+
+    err := urlval.Decode(r.URL.Query(), &request)
+    if err != nil {
+        return request, errors.Wrap(err, "failed to decode query parameters")
     }
 
-    query := r.URL.Query()
-    if page := query.Get("page"); page != "" {
-        if _, err := fmt.Sscanf(page, "%d", &request.Page); err != nil {
-            return request, errors.Wrap(err, "invalid page number")
-        }
+    if request.Page == 0 {
+        request.Page = 1
     }
-    if perPage := query.Get("per_page"); perPage != "" {
-        if _, err := fmt.Sscanf(perPage, "%d", &request.PerPage); err != nil {
-            return request, errors.Wrap(err, "invalid per_page number")
-        }
+    if request.PerPage == 0 {
+        request.PerPage = 20
     }
-    request.Address = query.Get("address")
+
+    request.Limit = uint64(request.PerPage)
+    request.PageNumber = uint64(request.Page)
 
     return request, validateListUSDTTransfersRequest(request)
 }
@@ -88,4 +90,11 @@ func validateListUSDTTransfersRequest(request ListUSDTTransfersRequest) error {
         return errors.New("invalid address format")
     }
     return nil
+}
+
+func (r ListUSDTTransfersRequest) GetPageParams() pgdb.OffsetPageParams {
+    return pgdb.OffsetPageParams{
+        Limit:      r.Limit,
+        PageNumber: r.PageNumber,
+    }
 }

@@ -9,6 +9,7 @@ import (
 
 type Ethereum struct {
     RPCURL string `fig:"rpc_url,required"`
+    StartingBlock uint64 `fig:"starting_block"`
 }
 
 type Ethereumer interface {

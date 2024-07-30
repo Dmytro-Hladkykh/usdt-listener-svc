@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data/pg"
@@ -35,16 +37,18 @@ func (s *service) run(cfg config.Config) error {
 }
 
 func (s *service) runUSDTListener() {
-    rpcURL := s.cfg.Ethereum().RPCURL
     db := pg.NewMasterQ(s.cfg.DB())
 
-    usdtListener, err := listener.NewListener(rpcURL, db, s.log)
+    processHist, _ := strconv.ParseBool(os.Getenv("PROCESS_HIST"))
+    startingBlock, _ := strconv.ParseUint(os.Getenv("STARTING_BLOCK"), 10, 64)
+
+    usdtListener, err := listener.NewListener(s.cfg, db, s.log)
     if err != nil {
         s.log.WithError(err).Error("Failed to create USDT listener")
         return
     }
 
-    if err := usdtListener.Listen(context.Background()); err != nil {
+    if err := usdtListener.Listen(context.Background(), processHist, startingBlock); err != nil {
         s.log.WithError(err).Error("USDT listener stopped")
     }
 }

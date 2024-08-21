@@ -4,8 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/config"
 	"github.com/Dmytro-Hladkykh/usdt-listener-svc/internal/data/pg"
@@ -39,8 +37,10 @@ func (s *service) run(cfg config.Config) error {
 func (s *service) runUSDTListener() {
     db := pg.NewMasterQ(s.cfg.DB())
 
-    processHist, _ := strconv.ParseBool(os.Getenv("PROCESS_HIST"))
-    startingBlock, _ := strconv.ParseUint(os.Getenv("STARTING_BLOCK"), 10, 64)
+    ethereumConfig := s.cfg.Ethereum()
+    s.log.WithField("ethereumConfig", ethereumConfig).Info("Ethereum configuration loaded")
+    
+    startingBlock := ethereumConfig.StartingBlock
 
     usdtListener, err := listener.NewListener(s.cfg, db, s.log)
     if err != nil {
@@ -48,11 +48,10 @@ func (s *service) runUSDTListener() {
         return
     }
 
-    if err := usdtListener.Listen(context.Background(), processHist, startingBlock); err != nil {
+    if err := usdtListener.Listen(context.Background(), true, startingBlock); err != nil {
         s.log.WithError(err).Error("USDT listener stopped")
     }
 }
-
 func newService(cfg config.Config) *service {
     return &service{
         log:      cfg.Log(),

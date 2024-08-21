@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"gitlab.com/distributed_lab/figure"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -8,8 +10,8 @@ import (
 )
 
 type Ethereum struct {
-    RPCURL string `fig:"rpc_url,required"`
-    StartingBlock uint64 `fig:"starting_block"`
+    RPCURL        string `fig:"rpc_url,required"`
+    StartingBlock uint64 `fig:"starting_block,required"`
 }
 
 type Ethereumer interface {
@@ -30,10 +32,23 @@ type ethereumConfig struct {
 func (e *ethereumConfig) Ethereum() *Ethereum {
     return e.once.Do(func() interface{} {
         var cfg Ethereum
-        err := figure.Out(&cfg).From(kv.MustGetStringMap(e.getter, "ethereum")).Please()
+        
+        raw := kv.MustGetStringMap(e.getter, "ethereum")
+        
+        err := figure.Out(&cfg).From(raw).Please()
         if err != nil {
-            panic(errors.Wrap(err, "failed to figure out ethereum"))
+            fmt.Printf("Error figuring out ethereum config: %v\n", err)
+            panic(errors.Wrap(err, "failed to figure out ethereum config"))
         }
+                
+        // Validate the configuration
+        if cfg.RPCURL == "" {
+            panic(errors.New("ethereum RPC URL is not set"))
+        }
+        if cfg.StartingBlock == 0 {
+            panic(errors.New("ethereum starting block is not set"))
+        }
+        
         return &cfg
     }).(*Ethereum)
 }

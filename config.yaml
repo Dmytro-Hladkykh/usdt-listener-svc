@@ -10,6 +10,7 @@ listener:
 
 ethereum:
   rpc_url: "wss://mainnet.infura.io/ws/v3/e6afe163675945c9b0f64b00139e5513"
+  starting_block: 20576594
 
 cop:
   disabled: true

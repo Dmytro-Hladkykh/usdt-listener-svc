@@ -17,7 +17,7 @@ import (
 
 const (
     USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-    BlockTime           = 12 * time.Second // Average Ethereum block time
+    BlockTime           = 12 * time.Second // Ethereum block time
 )
 
 // Listener struct
@@ -110,7 +110,6 @@ func (l *Listener) processBlocks(ctx context.Context, startBlock uint64) error {
 
         if err := l.processBlock(ctx, startBlock); err != nil {
             l.log.WithError(err).WithField("blockNumber", startBlock).Error("Failed to process block")
-            // Consider adding a small delay here to prevent rapid retries on persistent errors
             time.Sleep(time.Second)
             continue
         }
